@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os, sys, time,argparse
-from prettytable import PrettyTable
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
