@@ -18,10 +18,12 @@ global companies
 global titles
 global locations
 global websites
+global links
 companies = []
 titles = []
 locations = []
 websites = []
+links = []
 
 def search_indeed(jobtitle, location):
     global url1
@@ -33,6 +35,9 @@ def search_indeed(jobtitle, location):
     find_company_names = soup.find_all('span', attrs={'class': 'company'})
     find_job_titles = soup.find_all('a', attrs={'data-tn-element': 'jobTitle'})
     find_locations = soup.find_all('span', attrs={'class': 'location'})
+
+    #for href in soup.find_all('a', attrs={'data-tn-element': 'jobTitle'}, href=True):
+    #    links.append('https://www.indeed.nl' + href['href'])
 
     for i in find_company_names:
         companies.append(i.text.strip())
@@ -77,6 +82,7 @@ def search_stagemarkt(jobtitle, zip):
         companies.append(i.text.strip())
         titles.append(jobtitle)
         websites.append('https://www.stagemarkt.nl')
+        links.append('None')
 
     # Page 2
     url2 = 'https://stagemarkt.nl/Zoeken/Home/Resultaten?t=%s&s=5&z=&l=Nederland&b=False&c=&lw=&n=&pg=2&srt=&e=false&ToonOpKaart=False&ViewType=Lijst&SeedValue=0&LeerbedrijfId=0&p=%s' % (jobtitle.replace(' ', '+'), zip)
@@ -92,7 +98,7 @@ def search_stagemarkt(jobtitle, zip):
         websites.append('https://www.stagemarkt.nl')
 
 def result():
-    c = len(companies)
+    c = 0
     filepath = './log.csv'
 
     # Check if logfile exists, if not, create it
@@ -115,7 +121,7 @@ def result():
                 f.close()
 
 if not args.interval:
-    interval = 5
+    interval = 10
 else:
     interval = args.interval
 
@@ -136,7 +142,13 @@ else:
                     result()
                 time.sleep(interval)
         except KeyboardInterrupt:
+            try:
+                f = open('./log.csv').readlines()
+                print('Logged %i jobs!' % len(f))
+            except:
+                pass
             print('[i] Stopped...\n')
+
     except:
         print('[i] Monitoring for jobs as %s' % args.jobtitle)
         try:
