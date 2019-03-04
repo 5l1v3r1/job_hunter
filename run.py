@@ -33,10 +33,17 @@ def get_pages(url, jobtitle, location):
     pages = []
     for page in find_pages:
         pages.append(page.text.strip())
-    del pages[-1] # Remove 'Next' from list, I need values, not strings.
+
+    # TRY to delete it, if it can't be deleted, there is most likely just one page
+    try:
+        del pages[-1] # Remove 'Next' from list, I need values, not strings.
+        max_pages = int(max(pages))
+    except:
+        max_pages = 0
+
 
     c = 0
-    for i in range(1,int(max(pages)) + 1):
+    for i in range(1,int(max_pages) + 1):
         link = 'https://www.indeed.nl/jobs?q=%s&l=%s&start=%i' % (jobtitle, location, c)
         search_indeed(link)
         c +=10
