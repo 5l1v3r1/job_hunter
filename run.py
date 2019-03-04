@@ -36,8 +36,8 @@ def search_indeed(jobtitle, location):
     find_job_titles = soup.find_all('a', attrs={'data-tn-element': 'jobTitle'})
     find_locations = soup.find_all('span', attrs={'class': 'location'})
 
-    #for href in soup.find_all('a', attrs={'data-tn-element': 'jobTitle'}, href=True):
-    #    links.append('https://www.indeed.nl' + href['href'])
+    for href in soup.find_all('a', attrs={'data-tn-element': 'jobTitle'}, href=True):
+        links.append('https://www.indeed.nl' + href['href'])
 
     for i in find_company_names:
         companies.append(i.text.strip())
@@ -58,6 +58,9 @@ def search_indeed(jobtitle, location):
     find_company_names = soup.find_all('span', attrs={'class': 'company'})
     find_job_titles = soup.find_all('a', attrs={'data-tn-element': 'jobTitle'})
     find_locations = soup.find_all('span', attrs={'class': 'location'})
+
+    for href in soup.find_all('a', attrs={'data-tn-element': 'jobTitle'}, href=True):
+        links.append('https://www.indeed.nl' + href['href'])
 
     for i in find_company_names:
         companies.append(i.text.strip())
@@ -82,7 +85,13 @@ def search_stagemarkt(jobtitle, zip):
         companies.append(i.text.strip())
         titles.append(jobtitle)
         websites.append('https://www.stagemarkt.nl')
+        #links.append('None')
+
+    for bedrijf in soup.find_all('a', attrs={'class': 'link-details'}):
+        url = 'https://stagemarkt.nl/Zoeken/Home/Details?t=%s&s=5&z=&l=Nederland&b=False&c=&lw=&n=&pg=1&srt=beschikbaar&e=False&ToonOpKaart=False&ViewType=Lijst&SeedValue=10&LeerbedrijfId=%s&p=%s' % (jobtitle.replace(' ', '+'), bedrijf['data-leerbedrijfid'], zip)
+        #links.append(url)
         links.append('None')
+        #print(url)
 
     # Page 2
     url2 = 'https://stagemarkt.nl/Zoeken/Home/Resultaten?t=%s&s=5&z=&l=Nederland&b=False&c=&lw=&n=&pg=2&srt=&e=false&ToonOpKaart=False&ViewType=Lijst&SeedValue=0&LeerbedrijfId=0&p=%s' % (jobtitle.replace(' ', '+'), zip)
@@ -97,6 +106,12 @@ def search_stagemarkt(jobtitle, zip):
         titles.append(jobtitle)
         websites.append('https://www.stagemarkt.nl')
 
+    for bedrijf in soup.find_all('a', attrs={'class': 'link-details'}):
+        #url = 'https://stagemarkt.nl/Zoeken/Home/Details?t=%s&s=5&z=&l=Nederland&b=False&c=&lw=&n=&pg=1&srt=beschikbaar&e=False&ToonOpKaart=False&ViewType=Lijst&SeedValue=10&LeerbedrijfId=%s&p=%s' % (jobtitle.replace(' ', '+'), bedrijf['data-leerbedrijfid'], zip)
+        #links.append(url)
+        links.append('None')
+        #print(url)
+
 def result():
     c = 0
     filepath = './log.csv'
@@ -104,12 +119,12 @@ def result():
     # Check if logfile exists, if not, create it
     if not os.path.isfile(filepath):
         with open(filepath, 'w+') as f:
-            f.write('Num.,Job Title,Company,Website\n')
+            f.write('Num.,Job Title,Company,Website,Link\n')
             f.close()
         print('[+] Created logfile at %s' % filepath)
 
     for i in range(len(companies)):
-        result = str(c) + ')', titles[i], companies[i], websites[i]
+        result = str(c) + ')', titles[i], companies[i], websites[i], links[i]
         check = open(filepath).read()
 
         # If it's not a duplicate, print and save result
@@ -117,7 +132,7 @@ def result():
             c +=1
             print('%s %s %s %s' % (result[0].ljust(10), result[1].ljust(60), result[2].ljust(60), result[3].ljust(40)))
             with open(filepath, 'a+') as f:
-                f.write('%s,%s,%s,%s\n' % (result[0], result[1], result[2], result[3]))
+                f.write('%s,%s,%s,%s,%s\n' % (result[0], result[1], result[2], result[3], result[4]))
                 f.close()
 
 if not args.interval:
@@ -138,7 +153,7 @@ else:
             while True:
                 for i in job:
                     search_indeed(i, args.location)
-                    search_stagemarkt(i, args.zipcode)
+                    #search_stagemarkt(i, args.zipcode)
                     result()
                 time.sleep(interval)
         except KeyboardInterrupt:
@@ -154,8 +169,13 @@ else:
         try:
             while True:
                 search_indeed(args.jobtitle, args.location)
-                search_stagemarkt(args.jobtitle, args.zipcode)
+                #search_stagemarkt(args.jobtitle, args.zipcode)
                 result()
                 time.sleep(interval)
         except KeyboardInterrupt:
+            try:
+                f = open('./log.csv').readlines()
+                print('Logged %i jobs!' % len(f))
+            except:
+                pass
             print('[i] Stopped...\n')
