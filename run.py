@@ -25,10 +25,25 @@ locations = []
 websites = []
 links = []
 
-def search_indeed(jobtitle, location):
-    global url1
-    url1 = 'https://www.indeed.nl/jobs?q=%s&l=%s' % (jobtitle.replace(' ', '+'), location)
-    soup = BeautifulSoup(urlopen(url1), 'html.parser')
+def get_pages(url, jobtitle, location):
+    # Get the up to 5 pages
+    soup = BeautifulSoup(urlopen(url), 'html.parser')
+    find_pages = soup.find_all('span', attrs={'class': 'pn'})
+
+    pages = []
+    for page in find_pages:
+        pages.append(page.text.strip())
+    del pages[-1] # Remove 'Next' from list, I need values, not strings.
+
+    c = 0
+    for i in range(1,int(max(pages)) + 1):
+        link = 'https://www.indeed.nl/jobs?q=%s&l=%s&start=%i' % (jobtitle, location, c)
+        search_indeed(link)
+        c +=10
+
+def search_indeed(url):
+    #print('Searching page [%i] on url [%s]' % (int(page), url))
+    soup = BeautifulSoup(urlopen(url), 'html.parser')
 
     #print('[i] Searching for jobs as [%s] on Indeed.nl' % jobtitle)
 
@@ -49,68 +64,7 @@ def search_indeed(jobtitle, location):
     for i in find_locations:
         locations.append(i.text.strip())
 
-    # Page 2
-    url1 = 'https://www.indeed.nl/jobs?q=%s&l=%s&start=10' % (jobtitle.replace(' ', '+'), location)
-    soup = BeautifulSoup(urlopen(url1), 'html.parser')
-
-    #print('[i] Searching for jobs as [%s] on Indeed.nl on page 2' % jobtitle)
-
-    find_company_names = soup.find_all('span', attrs={'class': 'company'})
-    find_job_titles = soup.find_all('a', attrs={'data-tn-element': 'jobTitle'})
-    find_locations = soup.find_all('span', attrs={'class': 'location'})
-
-    for href in soup.find_all('a', attrs={'data-tn-element': 'jobTitle'}, href=True):
-        links.append('https://www.indeed.nl' + href['href'])
-
-    for i in find_company_names:
-        companies.append(i.text.strip())
-        websites.append('https://www.indeed.nl')
-
-    for i in find_job_titles:
-        titles.append(i.text.strip())
-
-    for i in find_locations:
-        locations.append(i.text.strip())
-
-def search_stagemarkt(jobtitle, zip):
-    global url2
-    url2 = 'https://stagemarkt.nl/Zoeken/Home/Resultaten?t=%s&s=5&z=&l=Nederland&b=False&c=&lw=&n=&pg=1&srt=&e=false&ToonOpKaart=False&ViewType=Lijst&SeedValue=0&LeerbedrijfId=0&p=%s' % (jobtitle.replace(' ', '+'), zip)
-    soup = BeautifulSoup(urlopen(url2), 'html.parser')
-
-    #print('[i] Searching for jobs as [%s] on Stagemarkt.nl' % jobtitle)
-
-    find_company_names = soup.find_all('div', attrs={'class': 'list__item__title'})
-
-    for i in find_company_names:
-        companies.append(i.text.strip())
-        titles.append(jobtitle)
-        websites.append('https://www.stagemarkt.nl')
-        #links.append('None')
-
-    for bedrijf in soup.find_all('a', attrs={'class': 'link-details'}):
-        url = 'https://stagemarkt.nl/Zoeken/Home/Details?t=%s&s=5&z=&l=Nederland&b=False&c=&lw=&n=&pg=1&srt=beschikbaar&e=False&ToonOpKaart=False&ViewType=Lijst&SeedValue=10&LeerbedrijfId=%s&p=%s' % (jobtitle.replace(' ', '+'), bedrijf['data-leerbedrijfid'], zip)
-        #links.append(url)
-        links.append('None')
-        #print(url)
-
-    # Page 2
-    url2 = 'https://stagemarkt.nl/Zoeken/Home/Resultaten?t=%s&s=5&z=&l=Nederland&b=False&c=&lw=&n=&pg=2&srt=&e=false&ToonOpKaart=False&ViewType=Lijst&SeedValue=0&LeerbedrijfId=0&p=%s' % (jobtitle.replace(' ', '+'), zip)
-    soup = BeautifulSoup(urlopen(url2), 'html.parser')
-
-    #print('[i] Searching for jobs as [%s] on Stagemarkt.nl on page 2' % jobtitle)
-
-    find_company_names = soup.find_all('div', attrs={'class': 'list__item__title'})
-
-    for i in find_company_names:
-        companies.append(i.text.strip())
-        titles.append(jobtitle)
-        websites.append('https://www.stagemarkt.nl')
-
-    for bedrijf in soup.find_all('a', attrs={'class': 'link-details'}):
-        #url = 'https://stagemarkt.nl/Zoeken/Home/Details?t=%s&s=5&z=&l=Nederland&b=False&c=&lw=&n=&pg=1&srt=beschikbaar&e=False&ToonOpKaart=False&ViewType=Lijst&SeedValue=10&LeerbedrijfId=%s&p=%s' % (jobtitle.replace(' ', '+'), bedrijf['data-leerbedrijfid'], zip)
-        #links.append(url)
-        links.append('None')
-        #print(url)
+    result()
 
 def result():
     c = 0
@@ -141,8 +95,9 @@ else:
     interval = args.interval
 
 # Run
-if args.jobtitle == None or args.location == None or args.zipcode == None:
-    print('[ERROR] Please give a jobtitle, location, zipcode...')
+#if args.jobtitle == None or args.location == None or args.zipcode == None:
+if args.jobtitle == None or args.location == None:
+    print('[ERROR] Please give a jobtitle, location...')
 else:
     try:
         job = args.jobtitle.split('/')
@@ -152,9 +107,9 @@ else:
         try:
             while True:
                 for i in job:
-                    search_indeed(i, args.location)
-                    #search_stagemarkt(i, args.zipcode)
-                    result()
+                    i = i.replace(' ','+')
+                    url = 'https://www.indeed.nl/jobs?q=%s&l=%s' % (i, args.location)
+                    get_pages(url, i, args.location)
                 time.sleep(interval)
         except KeyboardInterrupt:
             try:
@@ -164,13 +119,13 @@ else:
                 pass
             print('[i] Stopped...\n')
 
-    except:
+    except Exception as e:
+        print(e)
         print('[i] Monitoring for jobs as %s' % args.jobtitle)
         try:
             while True:
-                search_indeed(args.jobtitle, args.location)
-                #search_stagemarkt(args.jobtitle, args.zipcode)
-                result()
+                url = 'https://www.indeed.nl/jobs?q=%s&l=%s' % (args.jobtitle, args.location)
+                get_pages(url, args.jobtitle, args.location)
                 time.sleep(interval)
         except KeyboardInterrupt:
             try:
