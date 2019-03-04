@@ -1,2 +1,2 @@
 # job_hunter
-Search (Dutch) websites for available jobs.
+Search indeed.nl (Dutch indeed version) for available jobs.
