@@ -56,7 +56,7 @@ def search_indeed(url):
 
     find_company_names = soup.find_all('span', attrs={'class': 'company'})
     find_job_titles = soup.find_all('a', attrs={'data-tn-element': 'jobTitle'})
-    find_locations = soup.find_all('span', attrs={'class': 'location'})
+
 
     for href in soup.find_all('a', attrs={'data-tn-element': 'jobTitle'}, href=True):
         links.append('https://www.indeed.nl' + href['href'])
@@ -68,8 +68,11 @@ def search_indeed(url):
     for i in find_job_titles:
         titles.append(i.text.strip())
 
-    for i in find_locations:
-        locations.append(i.text.strip())
+    try:
+        for location in soup.find_all('div', attrs={'style': 'display: none'}):
+            locations.append(location['data-rc-loc'])
+    except:
+        pass
 
     result()
 
@@ -85,7 +88,7 @@ def result():
         print('[+] Created logfile at %s' % filepath)
 
     for i in range(len(companies)):
-        result = str(c) + ')', titles[i], companies[i], websites[i], links[i]
+        result = str(c) + ')', titles[i], companies[i], locations[i], links[i]
         check = open(filepath).read()
 
         # If it's not a duplicate, print and save result
