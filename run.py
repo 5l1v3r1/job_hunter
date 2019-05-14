@@ -83,7 +83,7 @@ def result(jobtitle):
     # Check if logfile exists, if not, create it
     if not os.path.isfile(filepath):
         with open(filepath, 'w+') as f:
-            f.write('Num.,Job Title,Company,Website,Link\n')
+            f.write('Num.,Query,Job Title,Company,Website,Link\n')
             f.close()
         print('[+] Created logfile at %s' % filepath)
 
