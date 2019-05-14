@@ -45,10 +45,10 @@ def get_pages(url, jobtitle, location):
     c = 0
     for i in range(1,int(max_pages) + 1):
         link = 'https://www.indeed.nl/jobs?q=%s&l=%s&start=%i' % (jobtitle, location, c)
-        search_indeed(link)
+        search_indeed(link, jobtitle)
         c +=10
 
-def search_indeed(url):
+def search_indeed(url, jobtitle):
     #print('Searching page [%i] on url [%s]' % (int(page), url))
     soup = BeautifulSoup(urlopen(url), 'html.parser')
 
@@ -74,9 +74,9 @@ def search_indeed(url):
     except:
         pass
 
-    result()
+    result(jobtitle)
 
-def result():
+def result(jobtitle):
     c = 0
     filepath = './log.csv'
 
@@ -88,15 +88,15 @@ def result():
         print('[+] Created logfile at %s' % filepath)
 
     for i in range(len(companies)):
-        result = str(c) + ')', titles[i], companies[i], locations[i], links[i]
+        result = str(c) + ')', jobtitle, titles[i], companies[i], locations[i], links[i]
         check = open(filepath).read()
 
         # If it's not a duplicate, print and save result
         if not companies[i] in check:
             c +=1
-            print('%s %s %s %s' % (result[0].ljust(10), result[1].ljust(60), result[2].ljust(60), result[3].ljust(40)))
+            print('%s %s %s %s %s' % (result[0].ljust(10), result[1].ljust(30), result[2].ljust(60), result[3].ljust(40), result[4].ljust(40)))
             with open(filepath, 'a+') as f:
-                f.write('%s,%s,%s,%s,%s\n' % (result[0], result[1], result[2], result[3], result[4]))
+                f.write('%s,%s,%s,%s,%s,%s\n' % (result[0], result[1], result[2], result[3], result[4], result[5]))
                 f.close()
 
 if not args.interval:
